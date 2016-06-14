@@ -1,0 +1,84 @@
+﻿@using OptimalScheduling.Models
+@model ScheduleViewModel
+@{
+    ViewBag.Title = "Schedule";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@functions{
+    public string GetDateString(DateTime date)
+    {
+        return string.Format("{0}.{1}.{2} {3:D2}:{4:D2}", date.Day, date.Month, date.Year, date.Hour, date.Minute);
+    }
+}
+
+<div>
+    <h2>@ViewBag.Title</h2>
+
+    <h4>Main algorithm:</h4>
+    <h5>@string.Format("Execution time: {0} ms", Model.FastAlgorithmTime)</h5>
+    @if (Model.AccurateAlgorithm || Model.FastAlgorithmSchedule.OptimalityCriterion)
+    {
+        <h5>@string.Format("The criterion of optimality holds: {0}", Model.FastAlgorithmSchedule.OptimalityCriterion)</h5>
+        <h5>@string.Format("Is optimal: {0}", Model.IsOptimal)</h5>
+    }
+
+    @if (Model.AccurateAlgorithm)
+    {
+        <h4>Branch and bounds method:</h4>
+        <h5>@string.Format("Execution time: {0} ms", Model.AccurateAlgorithmTime)</h5>
+    }
+
+    @if (Model.FastAlgorithmSchedule.Sum(x => x.Tasks.Count) < 50)
+    {
+        <div id="gantt-chart" style='width: 100%;'></div>
+        <input id="gantt-chart-data" type="hidden" value="@Model.GetJson()" />
+    }
+    else
+    {
+        foreach (var machine in Model.FastAlgorithmSchedule)
+        {
+            var startTime = machine.StartTime;
+            var tasks = machine.Tasks.ToList();
+            <h4>@string.Format("{0} (r{1} = {2})", machine.Machine.Name, machine.Machine.Id, GetDateString(startTime))</h4>
+            <table class="content-table table table-striped table-condensed table-bordered">
+                <tr>
+                    <th class="text-center">i</th>
+                    <th class="text-center">Name</th>
+                    <th class="text-center">Duration (minutes)</th>
+                    <th class="text-center">Deadlie</th>
+                    <th class="text-center">Start time</th>
+                    <th class="text-center">Release time</th>
+                </tr>
+                @for (var i = 0; i < tasks.Count; i++)
+                {
+                    <tr>
+                        <td class="text-center" style="vertical-align: middle;">
+                            @string.Format("{0}", i + 1)
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            @tasks[i].Name
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            @tasks[i].Duration
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            @GetDateString(tasks[i].Deadline)
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            @GetDateString(startTime)
+                        </td>
+
+                        @{ 
+                            startTime = startTime.AddMinutes(tasks[i].Duration);
+                        }
+
+                        <td class="text-center" style="vertical-align: middle;">
+                            @GetDateString(startTime)
+                        </td>
+                    </tr>
+                }
+            </table>
+        }
+    }
+</div>

@@ -29,56 +29,14 @@
         <h5>@string.Format("Execution time: {0} ms", Model.AccurateAlgorithmTime)</h5>
     }
 
-    @if (Model.FastAlgorithmSchedule.Sum(x => x.Tasks.Count) < 50)
+	@if (!string.IsNullOrEmpty(Model.FileId))
+	{
+		@Html.ActionLink("The file with results", "ResultFile", new { id = Model.FileId })
+	}
+
+	@if (Model.Visualization)
     {
         <div id="gantt-chart" style='width: 100%;'></div>
         <input id="gantt-chart-data" type="hidden" value="@Model.GetJson()" />
-    }
-    else
-    {
-        foreach (var machine in Model.FastAlgorithmSchedule)
-        {
-            var startTime = machine.StartTime;
-            var tasks = machine.Tasks.ToList();
-            <h4>@string.Format("{0} (r{1} = {2})", machine.Machine.Name, machine.Machine.Id, GetDateString(startTime))</h4>
-            <table class="content-table table table-striped table-condensed table-bordered">
-                <tr>
-                    <th class="text-center">i</th>
-                    <th class="text-center">Name</th>
-                    <th class="text-center">Duration (minutes)</th>
-                    <th class="text-center">Deadlie</th>
-                    <th class="text-center">Start time</th>
-                    <th class="text-center">Release time</th>
-                </tr>
-                @for (var i = 0; i < tasks.Count; i++)
-                {
-                    <tr>
-                        <td class="text-center" style="vertical-align: middle;">
-                            @string.Format("{0}", i + 1)
-                        </td>
-                        <td class="text-center" style="vertical-align: middle;">
-                            @tasks[i].Name
-                        </td>
-                        <td class="text-center" style="vertical-align: middle;">
-                            @tasks[i].Duration
-                        </td>
-                        <td class="text-center" style="vertical-align: middle;">
-                            @GetDateString(tasks[i].Deadline)
-                        </td>
-                        <td class="text-center" style="vertical-align: middle;">
-                            @GetDateString(startTime)
-                        </td>
-
-                        @{ 
-                            startTime = startTime.AddMinutes(tasks[i].Duration);
-                        }
-
-                        <td class="text-center" style="vertical-align: middle;">
-                            @GetDateString(startTime)
-                        </td>
-                    </tr>
-                }
-            </table>
-        }
     }
 </div>

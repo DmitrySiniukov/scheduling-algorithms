@@ -18,5 +18,10 @@ namespace OptimalScheduling.Models
 		/// Use branch & bounds method
 		/// </summary>
 		public bool BBMethod { get; set; }
+
+        /// <summary>
+        /// Build diagram
+        /// </summary>
+        public bool Visualization { get; set; }
 	}
 }

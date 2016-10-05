@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Web.Mvc;
 
 namespace OptimalScheduling.Controllers
@@ -12,7 +13,7 @@ namespace OptimalScheduling.Controllers
 	public class HomeController : Controller
 	{
 		[HttpGet]
-		public ActionResult Index()
+		public ActionResult Index()	
 		{
 			return View(new InputViewModel());
 		}
@@ -22,7 +23,7 @@ namespace OptimalScheduling.Controllers
 		{
 			if (model.TasksFile == null || model.MachinesFile == null)
 			{
-				ModelState.AddModelError("", "Fill all fields to continue.");
+				ModelState.AddModelError("", "Specify input files to continue.");
 				return View();
 			}
 
@@ -60,14 +61,12 @@ namespace OptimalScheduling.Controllers
 				ModelState.AddModelError("", "The machines file has incorrect format.");
 				return View();
 			}
-
-
+			
 			var sw1 = new Stopwatch();
 			sw1.Start();
 			var fastAlgorithmSchedule = Schedule<MachineSchedule>.BuildSchedule(tasks, machines);
 			sw1.Stop();
 			var fastAlgorithmTime = sw1.ElapsedMilliseconds;
-
 
 			var scheduleModel = new ScheduleViewModel
 			{
@@ -76,42 +75,117 @@ namespace OptimalScheduling.Controllers
 				IsOptimal = fastAlgorithmSchedule.OptimalityCriterion
 			};
 
-			if (model.BBMethod)
+            Schedule<MachineSchedule> accurateAlgorithmSchedule = null;
+            if (model.BBMethod)
+            {
+                var sw2 = new Stopwatch();
+                sw2.Start();
+                accurateAlgorithmSchedule = Schedule<MachineSchedule>.BuildOptimalSchedule(tasks, machines);
+                sw2.Stop();
+                var accurateAlgorithmTime = sw2.ElapsedMilliseconds;
+
+                if (accurateAlgorithmSchedule != null)
+                {
+                    scheduleModel.AccurateAlgorithmSchedule = accurateAlgorithmSchedule;
+                    scheduleModel.AccurateAlgorithmTime = accurateAlgorithmTime;
+                    scheduleModel.AccurateAlgorithm = true;
+
+                    if (!scheduleModel.IsOptimal)
+                    {
+                        var fastAlgTimes = fastAlgorithmSchedule.Select(x => x.StartTime).ToArray();
+                        var accAlgTimes = accurateAlgorithmSchedule.Select(x => x.StartTime).ToArray();
+                        var optimal =
+                            !(Schedule<MachineSchedule>.Compare(fastAlgTimes, accAlgTimes, fastAlgTimes.Length) < 0);
+                        scheduleModel.IsOptimal = optimal;
+                    }
+                }
+            }
+
+            var fileName = Path.GetTempFileName();
+			using (var fileStream = new StreamWriter(fileName))
 			{
-				var sw2 = new Stopwatch();
-				sw2.Start();
-				var accurateAlgorithmSchedule = Schedule<MachineSchedule>.BuildOptimalSchedule(tasks, machines);
-				sw2.Stop();
-				var accurateAlgorithmTime = sw2.ElapsedMilliseconds;
+				fileStream.WriteLine("n = {0}, m = {1}", tasks.Count, machines.Count);
+				fileStream.WriteLine();
 
-				scheduleModel.AccurateAlgorithmSchedule = accurateAlgorithmSchedule;
-				scheduleModel.AccurateAlgorithmTime = accurateAlgorithmTime;
-				scheduleModel.AccurateAlgorithm = true;
+			    if (model.BBMethod)
+			    {
+                    fileStream.WriteLine("By the fast algorithm:");
+                }
 
-				if (!scheduleModel.IsOptimal)
+			    printSchedule(fastAlgorithmSchedule, fileStream, baseDeadline);
+
+				if (model.BBMethod)
 				{
-					var fastAlgTimes = fastAlgorithmSchedule.Select(x => x.StartTime).ToArray();
-					var accAlgTimes = accurateAlgorithmSchedule.Select(x => x.StartTime).ToArray();
-					var optimal = !(Schedule<MachineSchedule>.Compare(fastAlgTimes, accAlgTimes, fastAlgTimes.Length) < 0);
-					scheduleModel.IsOptimal = optimal;
+					fileStream.WriteLine();
+					fileStream.WriteLine("By the accurate algorithm:");
+
+				    if (accurateAlgorithmSchedule == null)
+                    {
+                        fileStream.WriteLine("An error has occured...");
+                    }
+				    else
+                    {
+                        printSchedule(accurateAlgorithmSchedule, fileStream, baseDeadline);
+                    }
 				}
 			}
+
+			scheduleModel.Visualization = model.Visualization;
+			scheduleModel.FileId = Path.GetFileNameWithoutExtension(fileName);
 
 			return View("Schedule", scheduleModel);
 		}
 
+		public ActionResult ResultFile(string id)
+		{
+			if (string.IsNullOrEmpty(id))
+			{
+				return Redirect("~/Shared/Error.cshtml");
+			}
+
+			byte[] fileBytes;
+			try
+			{
+				var tempPath = Path.GetTempPath();
+				var path = string.Format(@"{0}/{1}.tmp", tempPath, id);
+				fileBytes = System.IO.File.ReadAllBytes(path);
+				System.IO.File.Delete(path);
+			}
+			catch (Exception)
+			{
+				return Redirect("~/Shared/Error.cshtml");
+			}
+			
+			var fileName = "Result.txt";
+			return File(fileBytes, MediaTypeNames.Application.Octet, fileName);
+		}
+
 		public ActionResult About()
 		{
-			ViewBag.Message = "Your application description page.";
-
 			return View();
 		}
 
 		public ActionResult Contact()
 		{
-			ViewBag.Message = "Your contact page.";
-
 			return View();
+		}
+
+
+		private void printSchedule(Schedule<MachineSchedule> schedule, StreamWriter streamWriter, DateTime baseDeadline)
+		{
+			foreach (var machineSchedule in schedule)
+			{
+				var st = (machineSchedule.StartTime - baseDeadline).TotalMinutes;
+				streamWriter.WriteLine("({0}) \"{1}\" (r{0} = {2})", machineSchedule.Machine.Id, machineSchedule.Machine.Name, st);
+				var startTime = (machineSchedule.StartTime - baseDeadline).TotalMinutes;
+				foreach (var task in machineSchedule.Tasks)
+				{
+					var d = (task.Deadline - baseDeadline).TotalMinutes;
+					streamWriter.WriteLine("\t({0}) \"{1}\"\t{2}\t{3}\t{4}\t{5}", task.Id, task.Name, task.Duration, d, startTime,
+						startTime + task.Duration);
+					startTime += task.Duration;
+				}
+			}
 		}
 	}
 }

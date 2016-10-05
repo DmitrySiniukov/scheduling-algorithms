@@ -18,7 +18,11 @@ namespace OptimalScheduling.Models
 
 		public bool AccurateAlgorithm { get; set; }
 
-		public bool IsOptimal { get; set; }
+	    public bool Visualization { get; set; }
+
+	    public bool IsOptimal { get; set; }
+
+		public string FileId { get; set; }
 
 
 		public string GetJson()

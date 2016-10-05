@@ -75,8 +75,8 @@ namespace OptimalScheduling.Models
 			
 			tasksList.Sort((x, y) =>
 			{
-				var result = x.ExtremeTime.CompareTo(y.ExtremeTime);
-				return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
+				var t = x.ExtremeTime.CompareTo(y.ExtremeTime);
+				return t == 0 ? x.Duration.CompareTo(y.Duration) : t;
 			});
 
 			var initSchedule = initialSchedule(tasksList, machinesList);
@@ -87,7 +87,9 @@ namespace OptimalScheduling.Models
 				if (initSchedule.NextTaskIndex == tasksList.Count)
 				{
 					initSchedule.OptimalityCriterion = true;
-					return initSchedule.Convert();
+					var r = initSchedule.Convert();
+					r.Sort((x, y) => x.StartTime.CompareTo(y.StartTime));
+					return r;
 				}
 
 				// Algorithm A1.1
@@ -112,7 +114,9 @@ namespace OptimalScheduling.Models
 
 				if (success)
 				{
-					return (new InitialSchedule(sortedSet).Convert());
+					var r = (new InitialSchedule(sortedSet).Convert());
+					r.Sort((x, y) => x.StartTime.CompareTo(y.StartTime));
+					return r;
 				}
 			}
 
@@ -121,8 +125,8 @@ namespace OptimalScheduling.Models
 			// Sort by (d, l)
 			tasksList.Sort((x, y) =>
 			{
-				var result = x.Deadline.CompareTo(y.Deadline);
-				return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
+				var t = x.Deadline.CompareTo(y.Deadline);
+				return t == 0 ? x.Duration.CompareTo(y.Duration) : t;
 			});
 
 			var machineSchedule = new Schedule<MachineSchedule>(machinesList);
@@ -176,7 +180,10 @@ namespace OptimalScheduling.Models
 				tasksList.RemoveAt(index);
 			}
 
-			return new Schedule<MachineSchedule>(scheduleSet);
+			var result = new Schedule<MachineSchedule>(scheduleSet);
+			result.Sort((x, y) => x.StartTime.CompareTo(y.StartTime));
+
+			return result;
 		}
 
 		/// <summary>
@@ -451,6 +458,8 @@ namespace OptimalScheduling.Models
 			{
 				result[i].StartTime = record.StartTimes[i];
 			}
+
+			result.Sort((x, y) => x.StartTime.CompareTo(y.StartTime));
 
 			return result;
 		}

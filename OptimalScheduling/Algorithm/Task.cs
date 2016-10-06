@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OptimalScheduling.Infrastructure
+namespace OptimalScheduling.Algorithm
 {
 	/// <summary>
 	/// Represents a task for processing

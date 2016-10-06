@@ -1,5 +1,4 @@
-﻿using OptimalScheduling.Infrastructure;
-using OptimalScheduling.Models;
+﻿using OptimalScheduling.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Web.Mvc;
+using OptimalScheduling.Algorithm;
 
 namespace OptimalScheduling.Controllers
 {
@@ -64,7 +64,7 @@ namespace OptimalScheduling.Controllers
 			
 			var sw1 = new Stopwatch();
 			sw1.Start();
-			var fastAlgorithmSchedule = Schedule<MachineSchedule>.BuildSchedule(tasks, machines);
+			var fastAlgorithmSchedule = Schedule.BuildWithPrimaryAlgorithm(tasks, machines);
 			sw1.Stop();
 			var fastAlgorithmTime = sw1.ElapsedMilliseconds;
 
@@ -75,12 +75,12 @@ namespace OptimalScheduling.Controllers
 				IsOptimal = fastAlgorithmSchedule.OptimalityCriterion
 			};
 
-            Schedule<MachineSchedule> accurateAlgorithmSchedule = null;
+            Schedule accurateAlgorithmSchedule = null;
             if (model.BBMethod)
             {
                 var sw2 = new Stopwatch();
                 sw2.Start();
-                accurateAlgorithmSchedule = Schedule<MachineSchedule>.BuildOptimalSchedule(tasks, machines);
+                accurateAlgorithmSchedule = Schedule.BuildOptimalSchedule(tasks, machines);
                 sw2.Stop();
                 var accurateAlgorithmTime = sw2.ElapsedMilliseconds;
 
@@ -95,7 +95,7 @@ namespace OptimalScheduling.Controllers
                         var fastAlgTimes = fastAlgorithmSchedule.Select(x => x.StartTime).ToArray();
                         var accAlgTimes = accurateAlgorithmSchedule.Select(x => x.StartTime).ToArray();
                         var optimal =
-                            !(Schedule<MachineSchedule>.Compare(fastAlgTimes, accAlgTimes, fastAlgTimes.Length) < 0);
+                            !(Schedule.Compare(fastAlgTimes, accAlgTimes, fastAlgTimes.Length) < 0);
                         scheduleModel.IsOptimal = optimal;
                     }
                 }
@@ -171,7 +171,7 @@ namespace OptimalScheduling.Controllers
 		}
 
 
-		private void printSchedule(Schedule<MachineSchedule> schedule, StreamWriter streamWriter, DateTime baseDeadline)
+		private void printSchedule(Schedule schedule, StreamWriter streamWriter, DateTime baseDeadline)
 		{
 			foreach (var machineSchedule in schedule)
 			{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace OptimalScheduling.Infrastructure
+namespace OptimalScheduling.Algorithm
 {
 	public class MachineSchedule
 	{
@@ -49,17 +49,6 @@ namespace OptimalScheduling.Infrastructure
 		public MachineSchedule()
 		: this(null, DateTime.MaxValue, new LinkedList<Task>())
 		{
-		}
-
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="machine"></param>
-		/// <returns></returns>
-		public virtual MachineSchedule Create(Machine machine)
-		{
-			return new MachineSchedule(machine);
 		}
 	}
 }

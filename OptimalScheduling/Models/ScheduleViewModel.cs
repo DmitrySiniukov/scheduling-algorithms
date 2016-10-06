@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
-using OptimalScheduling.Infrastructure;
+using OptimalScheduling.Algorithm;
 
 namespace OptimalScheduling.Models
 {
 	public class ScheduleViewModel
 	{
-		public Schedule<MachineSchedule> FastAlgorithmSchedule { get; set; }
+		public Schedule FastAlgorithmSchedule { get; set; }
 
 		public long FastAlgorithmTime { get; set; }
 
-		public Schedule<MachineSchedule> AccurateAlgorithmSchedule { get; set; }
+		public Schedule AccurateAlgorithmSchedule { get; set; }
 
 		public long AccurateAlgorithmTime { get; set; }
 
@@ -89,7 +89,7 @@ namespace OptimalScheduling.Models
 		}
 
 
-		private static void getData(Schedule<MachineSchedule> schedule, int? commonId, ref int startId, ref int startLinkId,
+		private static void getData(Schedule schedule, int? commonId, ref int startId, ref int startLinkId,
 			out List<object> data, out List<object> links, out DateTime? minStartTime, out double? totalDuration)
 		{
 			data = new List<object>();

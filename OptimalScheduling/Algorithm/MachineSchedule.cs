@@ -3,12 +3,12 @@ using System.Collections.Generic;
 
 namespace OptimalScheduling.Algorithm
 {
-	public class MachineSchedule
+	public class MachineSchedule : ICloneable
 	{
 		/// <summary>
 		/// Machine
 		/// </summary>
-		public Machine Machine { get; private set; }
+		public Machine Machine { get; }
 
 		/// <summary>
 		/// The time of launch
@@ -18,7 +18,7 @@ namespace OptimalScheduling.Algorithm
 		/// <summary>
 		/// Tasks
 		/// </summary>
-		public LinkedList<Task> Tasks { get; private set; }
+		public LinkedList<Task> Tasks { get; }
 
 
 		/// <summary>
@@ -50,5 +50,10 @@ namespace OptimalScheduling.Algorithm
 		: this(null, DateTime.MaxValue, new LinkedList<Task>())
 		{
 		}
+
+	    public object Clone()
+	    {
+	        return new MachineSchedule(Machine, StartTime, new LinkedList<Task>(Tasks));
+	    }
 	}
 }

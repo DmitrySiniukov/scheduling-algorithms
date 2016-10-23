@@ -92,10 +92,7 @@ namespace OptimalScheduling.Controllers
 
                     if (!scheduleModel.IsOptimal)
                     {
-                        var fastAlgTimes = fastAlgorithmSchedule.Select(x => x.StartTime).ToArray();
-                        var accAlgTimes = accurateAlgorithmSchedule.Select(x => x.StartTime).ToArray();
-                        var optimal =
-                            !(Schedule.Compare(fastAlgTimes, accAlgTimes, fastAlgTimes.Length) < 0);
+                        var optimal = fastAlgorithmSchedule.CompareTo(accurateAlgorithmSchedule) == 0;
                         scheduleModel.IsOptimal = optimal;
                     }
                 }

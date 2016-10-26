@@ -1,0 +1,4 @@
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\bin\Debug\OptimalSchedulingLogic.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\bin\Debug\OptimalSchedulingLogic.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\obj\Debug\OptimalSchedulingLogic.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\obj\Debug\OptimalSchedulingLogic.pdb

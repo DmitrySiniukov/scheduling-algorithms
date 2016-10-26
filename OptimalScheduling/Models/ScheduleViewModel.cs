@@ -1,14 +1,15 @@
-﻿using System;
+﻿using OptimalSchedulingLogic;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Web.Script.Serialization;
-using OptimalScheduling.Algorithm;
 
-namespace OptimalScheduling.Models
+namespace WebApplication.Models
 {
-	public class ScheduleViewModel
+    public class ScheduleViewModel
 	{
-		public Schedule FastAlgorithmSchedule { get; set; }
+        #region Properties
+
+        public Schedule FastAlgorithmSchedule { get; set; }
 
 		public long FastAlgorithmTime { get; set; }
 
@@ -24,8 +25,9 @@ namespace OptimalScheduling.Models
 
 		public string FileId { get; set; }
 
+        #endregion
 
-		public string GetJson()
+        public string GetJson()
 		{
 			var data = new List<object>();
 			var links = new List<object>();
@@ -88,8 +90,9 @@ namespace OptimalScheduling.Models
 			return new JavaScriptSerializer().Serialize(new { data = data, links = links });
 		}
 
+        #region Service functions
 
-		private static void getData(Schedule schedule, int? commonId, ref int startId, ref int startLinkId,
+        private static void getData(Schedule schedule, int? commonId, ref int startId, ref int startLinkId,
 			out List<object> data, out List<object> links, out DateTime? minStartTime, out double? totalDuration)
 		{
 			data = new List<object>();
@@ -98,7 +101,7 @@ namespace OptimalScheduling.Models
 			totalDuration = null;
 			minStartTime = null;
 			DateTime? maxEndTime = null;
-			foreach (var machine in schedule.OrderBy(x => x.StartTime))
+			foreach (var machine in schedule)
 			{
 				if (machine.Tasks.Count != 0)
 				{
@@ -171,5 +174,7 @@ namespace OptimalScheduling.Models
 		{
 			return string.Format("{0:D2}-{1:D2}-{2} {3:D2}:{4:D2}", date.Day, date.Month, date.Year, date.Hour, date.Minute);
 		}
-	}
+
+        #endregion
+    }
 }

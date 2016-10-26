@@ -13,8 +13,8 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OptimalScheduling</RootNamespace>
-    <AssemblyName>OptimalScheduling</AssemblyName>
+    <RootNamespace>WebApplication</RootNamespace>
+    <AssemblyName>WebApplication</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
@@ -152,11 +152,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Algorithm\Machine.cs" />
-    <Compile Include="Algorithm\MachineSchedule.cs" />
-    <Compile Include="Algorithm\Task.cs" />
     <Compile Include="Models\InputViewModel.cs" />
-    <Compile Include="Algorithm\Schedule.cs" />
     <Compile Include="Models\ScheduleViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -417,6 +413,7 @@
     <Content Include="Views\Home\Schedule.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Algorithm\" />
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
@@ -426,6 +423,12 @@
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OptimalSchedulingLogic\OptimalSchedulingLogic.csproj">
+      <Project>{6b76ccb1-d5ce-4348-9241-77ab2380e949}</Project>
+      <Name>OptimalSchedulingLogic</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

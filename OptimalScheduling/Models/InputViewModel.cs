@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace OptimalScheduling.Models
+namespace WebApplication.Models
 {
 	public class InputViewModel
 	{

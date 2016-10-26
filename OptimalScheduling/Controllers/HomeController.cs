@@ -1,16 +1,15 @@
-﻿using OptimalScheduling.Models;
+﻿using OptimalSchedulingLogic;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Mime;
 using System.Web.Mvc;
-using OptimalScheduling.Algorithm;
+using WebApplication.Models;
 
-namespace OptimalScheduling.Controllers
+namespace WebApplication.Controllers
 {
-	public class HomeController : Controller
+    public class HomeController : Controller
 	{
 		[HttpGet]
 		public ActionResult Index()	
@@ -80,7 +79,7 @@ namespace OptimalScheduling.Controllers
             {
                 var sw2 = new Stopwatch();
                 sw2.Start();
-                accurateAlgorithmSchedule = Schedule.BuildOptimalSchedule(tasks, machines);
+                accurateAlgorithmSchedule = Schedule.BuildSchedule(tasks, machines);
                 sw2.Stop();
                 var accurateAlgorithmTime = sw2.ElapsedMilliseconds;
 

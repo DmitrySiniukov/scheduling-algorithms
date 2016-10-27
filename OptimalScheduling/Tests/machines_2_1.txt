@@ -1,3 +1,0 @@
-2
-1 Machine_1
-2 Machine_2

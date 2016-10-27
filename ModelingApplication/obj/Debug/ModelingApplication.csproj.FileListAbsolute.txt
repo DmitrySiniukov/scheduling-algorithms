@@ -1,0 +1,10 @@
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\ModelingApplication.exe.config
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\ModelingApplication.exe
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\ModelingApplication.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\MathNet.Numerics.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\OptimalSchedulingLogic.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\OptimalSchedulingLogic.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\MathNet.Numerics.xml
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.csprojResolveAssemblyReference.cache
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.exe
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.pdb

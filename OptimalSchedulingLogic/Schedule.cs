@@ -9,6 +9,9 @@ namespace OptimalSchedulingLogic
     /// </summary>
     public class Schedule : List<MachineSchedule>, IComparable<Schedule>, ICloneable
     {
+        /// <summary>
+        /// The criterion of optimality is satisfied
+        /// </summary>
         public bool OptimalityCriterion { get; private set; }
 
         #region Constructors
@@ -96,9 +99,16 @@ namespace OptimalSchedulingLogic
 
         #endregion
 
-        #region Schedule builders
+        #region Public methods
 
-        public static Schedule BuildWithPrimaryAlgorithm(IEnumerable<Task> tasks, IEnumerable<Machine> machines,
+        /// <summary>
+        /// Build an approximate schedule with the primary Pavlov's algorithm
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <param name="machines">Machines</param>
+        /// <param name="adjustmentBorder">(For A12a) The extreme value after which the adjustment algorithm is called</param>
+        /// <returns>Result</returns>
+        public static Schedule BuildWithPavlovAlgorithm(IEnumerable<Task> tasks, IEnumerable<Machine> machines,
             TimeSpan? adjustmentBorder = null)
         {
             var tasksList = new List<Task>(tasks);
@@ -113,7 +123,7 @@ namespace OptimalSchedulingLogic
 
             var schedule_A11 = new Schedule(machinesList);
             int nextTaskIndex;
-            var initSchedule = schedule_A11.primaryInitialSchedule(tasksList, out nextTaskIndex);
+            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
 
             var adjBorder = adjustmentBorder ?? new TimeSpan(0, 8, 0);
             
@@ -233,6 +243,12 @@ namespace OptimalSchedulingLogic
             return bestSchedule;
         }
 
+        /// <summary>
+        /// A new optimized algorithm
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <param name="machines">Machines</param>
+        /// <returns></returns>
         public static Schedule BuildSchedule(IEnumerable<Task> tasks, IEnumerable<Machine> machines)
         {
             var tasksList = tasks.ToList();
@@ -307,6 +323,12 @@ namespace OptimalSchedulingLogic
             return result;
         }
 
+        /// <summary>
+        /// Build an optimal schedule with a BB algorithm
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <param name="machines">Machines</param>
+        /// <returns></returns>
         public static Schedule BuildOptimalSchedule(IEnumerable<Task> tasks, IEnumerable<Machine> machines)
         {
             var tasksList = tasks.ToList();
@@ -561,15 +583,31 @@ namespace OptimalSchedulingLogic
             schedule.sort();
             return schedule;
         }
-        
+
+        public static Schedule OptimalInitialSchedulePrimary(IEnumerable<Task> tasks, IEnumerable<Machine> machines)
+        {
+            var tasksList = new List<Task>(tasks);
+            tasksList.Sort((x, y) => x.ExtremeTime.CompareTo(y.ExtremeTime));
+            var schedule = new Schedule(machines);
+
+            int nextTaskIndex;
+            var result = schedule.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
+            if (result == null)
+            {
+                return null;
+            }
+
+            return schedule;
+        }
+
         #endregion
 
         #region Service functions
 
-        private SortedSet<MachineScheduleWrapper> primaryInitialSchedule(List<Task> tasks, out int nextTaskIndex)
+        private SortedSet<MachineScheduleWrapper> optimalInitialSchedulePrimary(List<Task> tasks, out int nextTaskIndex)
         {
             nextTaskIndex = 0;
-            var machineSchedules = new SortedSet<MachineScheduleWrapper>();
+            var initialAppointmentInfo = new SortedSet<MachineScheduleWrapper>();
 
             // Engage one machine and appoint first task
             var firstTask = tasks[0];
@@ -577,7 +615,7 @@ namespace OptimalSchedulingLogic
             engagedMachine.Schedule.Tasks.AddLast(firstTask);
             engagedMachine.Schedule.StartTime = firstTask.ExtremeTime;
             engagedMachine.EndTime = firstTask.Deadline;
-            machineSchedules.Add(engagedMachine);
+            initialAppointmentInfo.Add(engagedMachine);
 
             var i = 1;
             var j = 1;
@@ -586,7 +624,7 @@ namespace OptimalSchedulingLogic
                 var currentTask = tasks[i];
 
                 // Check di-Ci < lp
-                foreach (var machineSchedule in machineSchedules)
+                foreach (var machineSchedule in initialAppointmentInfo)
                 {
                     var currentEndTime = machineSchedule.Schedule.StartTime;
                     foreach (var task in machineSchedule.Schedule.Tasks)
@@ -601,7 +639,7 @@ namespace OptimalSchedulingLogic
 
                 ++i;
 
-                var minMachine = machineSchedules.Min;
+                var minMachine = initialAppointmentInfo.Min;
                 if (minMachine.EndTime > currentTask.ExtremeTime)
                 {
                     // engage next processor
@@ -609,28 +647,28 @@ namespace OptimalSchedulingLogic
                     nextMachine.Schedule.StartTime = currentTask.ExtremeTime;
                     nextMachine.Schedule.Tasks.AddLast(currentTask);
                     nextMachine.EndTime = currentTask.Deadline;
-                    machineSchedules.Add(nextMachine);
+                    initialAppointmentInfo.Add(nextMachine);
                     ++j;
                     continue;
                 }
 
-                machineSchedules.Remove(minMachine);
-                if (machineSchedules.Count > 0 && !(machineSchedules.Min.EndTime > currentTask.ExtremeTime))
+                initialAppointmentInfo.Remove(minMachine);
+                if (initialAppointmentInfo.Count > 0 && !(initialAppointmentInfo.Min.EndTime > currentTask.ExtremeTime))
                 {
                     return null;
                 }
                 
                 minMachine.Schedule.Tasks.AddLast(currentTask);
                 minMachine.EndTime = minMachine.EndTime.AddMinutes(currentTask.Duration);
-                machineSchedules.Add(minMachine);
+                initialAppointmentInfo.Add(minMachine);
             }
 
             nextTaskIndex = i;
 
-            return machineSchedules;
+            return initialAppointmentInfo;
         }
 
-        private static Schedule initialSchedule(List<Task> tasks, List<Machine> machines, out int nextTaskIndex,
+        private static Schedule optimalInitialSchedule(List<Task> tasks, List<Machine> machines, out int nextTaskIndex,
             out Dictionary<int, DateTime> endTimes)
         {
             throw new NotImplementedException();
@@ -1094,10 +1132,14 @@ namespace OptimalSchedulingLogic
             return currentStartTime;
         }
 
+        private static readonly List<int> _firstComparedIndexes = new List<int>();
+        private static readonly List<int> _secondComparedIndexes = new List<int>();
+
         private static int compare(DateTime[] first, DateTime[] second, int count)
         {
-            var firstComparedIndexes = new List<int>();
-            var secondComparedIndexes = new List<int>();
+            _firstComparedIndexes.Clear();
+            _secondComparedIndexes.Clear();
+
             for (var i = 0; i < count; i++)
             {
                 var firstMinTimeIndex = -1;
@@ -1105,7 +1147,7 @@ namespace OptimalSchedulingLogic
                 for (var j = 0; j < count; j++)
                 {
                     var current = first[j];
-                    if ((firstMinTimeIndex < 0 || current < firstMinTime) && !firstComparedIndexes.Contains(j))
+                    if ((firstMinTimeIndex < 0 || current < firstMinTime) && !_firstComparedIndexes.Contains(j))
                     {
                         firstMinTimeIndex = j;
                         firstMinTime = current;
@@ -1117,7 +1159,7 @@ namespace OptimalSchedulingLogic
                 for (var j = 0; j < count; j++)
                 {
                     var current = second[j];
-                    if ((secondMinTimeIndex < 0 || current < secondMinTime) && !secondComparedIndexes.Contains(j))
+                    if ((secondMinTimeIndex < 0 || current < secondMinTime) && !_secondComparedIndexes.Contains(j))
                     {
                         secondMinTimeIndex = j;
                         secondMinTime = current;
@@ -1128,13 +1170,13 @@ namespace OptimalSchedulingLogic
                 {
                     return -1;
                 }
-                if (firstMinTime < secondMinTime)
+                if (firstMinTime > secondMinTime)
                 {
                     return 1;
                 }
 
-                firstComparedIndexes.Add(firstMinTimeIndex);
-                secondComparedIndexes.Add(secondMinTimeIndex);
+                _firstComparedIndexes.Add(firstMinTimeIndex);
+                _secondComparedIndexes.Add(secondMinTimeIndex);
             }
 
             return 0;
@@ -1187,7 +1229,7 @@ namespace OptimalSchedulingLogic
             }
         }
 
-        private struct BBNode
+        private class BBNode
         {
             public int TaskIndex { get; }
 

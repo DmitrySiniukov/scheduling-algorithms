@@ -63,7 +63,7 @@ namespace WebApplication.Controllers
 			
 			var sw1 = new Stopwatch();
 			sw1.Start();
-			var fastAlgorithmSchedule = Schedule.BuildSchedule(tasks, machines);
+			var fastAlgorithmSchedule = Schedule.BuildWithPavlovAlgorithm(tasks, machines);
 			sw1.Stop();
 			var fastAlgorithmTime = sw1.ElapsedMilliseconds;
 

@@ -29,7 +29,7 @@ namespace ModelingApplication
                     tasks.Add(new Task(j + 1, string.Format("Task #{0}", j + 1), lengthGenerator(), currentDeadline));
                 }
 
-                var res = Schedule.OptimalInitialSchedulePrimary(tasks, machines);
+                var res = Schedule.OptimalInitialSchedule(tasks, machines);
                 if (res != null)
                 {
                     succeedCounter++;
@@ -49,7 +49,7 @@ namespace ModelingApplication
             do
             {
                 value = distribution.Sample();
-                
+
             } while (!(value > 0));
 
             return value;
@@ -58,6 +58,11 @@ namespace ModelingApplication
         public static double NextExponential(double rate)
         {
             return Exponential.Sample(rate);
+        }
+
+        public static double NextGamma(double shape, double rate)
+        {
+            return Gamma.Sample(shape, rate);
         }
     }
 }

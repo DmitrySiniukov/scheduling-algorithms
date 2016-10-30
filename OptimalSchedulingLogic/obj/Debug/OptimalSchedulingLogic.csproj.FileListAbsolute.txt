@@ -3,3 +3,6 @@ C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\obj\Debug\OptimalSchedulingLogic.dll
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\obj\Debug\OptimalSchedulingLogic.pdb
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\obj\Debug\OptimalSchedulingLogic.csprojResolveAssemblyReference.cache
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\bin\Debug\Combinatorics.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\bin\Debug\Combinatorics.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\OptimalSchedulingLogic\bin\Debug\Combinatorics.xml

@@ -124,7 +124,7 @@ namespace OptimalSchedulingLogic
 
             var schedule_A11 = new Schedule(machinesList);
             int nextTaskIndex;
-            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
+            var initSchedule = schedule_A11.optimalInitialSchedule(tasksList, 3.0, out nextTaskIndex);
 
             var adjBorder = adjustmentBorder ?? new TimeSpan(0, 8, 0);
             
@@ -152,27 +152,27 @@ namespace OptimalSchedulingLogic
                     initScheduleList.Add((MachineScheduleWrapper)machineSchedule.Clone());
                 }
 
-                var success_A11 = true;
+                var success_A11 = false;
 
-                #region Algorithm A1.1
+                //#region Algorithm A1.1
 
-                foreach (var currentTask in remainingTasks)
-                {
-                    var firstMachine = initSchedule.Min;
-                    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
-                    if (newEndTime > currentTask.Deadline)
-                    {
-                        success_A11 = false;
-                        break;
-                    }
+                //foreach (var currentTask in remainingTasks)
+                //{
+                //    var firstMachine = initSchedule.Min;
+                //    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
+                //    if (newEndTime > currentTask.Deadline)
+                //    {
+                //        success_A11 = false;
+                //        break;
+                //    }
 
-                    initSchedule.Remove(firstMachine);
-                    firstMachine.Schedule.Tasks.AddLast(currentTask);
-                    firstMachine.EndTime = newEndTime;
-                    initSchedule.Add(firstMachine);
-                }
+                //    initSchedule.Remove(firstMachine);
+                //    firstMachine.Schedule.Tasks.AddLast(currentTask);
+                //    firstMachine.EndTime = newEndTime;
+                //    initSchedule.Add(firstMachine);
+                //}
 
-                #endregion
+                //#endregion
 
                 if (success_A11)
                 {
@@ -601,7 +601,8 @@ namespace OptimalSchedulingLogic
             return schedule;
         }
 
-        public static Schedule OptimalInitialSchedule(IEnumerable<Task> tasks, double combinationBorder, IEnumerable<Machine> machines)
+        public static Schedule OptimalInitialSchedule(IEnumerable<Task> tasks, IEnumerable<Machine> machines,
+            double combinationBorder)
         {
             var tasksList = new List<Task>(tasks);
             tasksList.Sort((x, y) => x.ExtremeTime.CompareTo(y.ExtremeTime));
@@ -628,10 +629,9 @@ namespace OptimalSchedulingLogic
 
             // Engage one machine and appoint first task
             var firstTask = tasks[0];
-            var engagedMachine = new MachineScheduleWrapper(this[0]);
+            var engagedMachine = new MachineScheduleWrapper(this[0], firstTask.Deadline);
             engagedMachine.Schedule.Tasks.AddLast(firstTask);
             engagedMachine.Schedule.StartTime = firstTask.ExtremeTime;
-            engagedMachine.EndTime = firstTask.Deadline;
             initialAppointmentInfo.Add(engagedMachine);
 
             var i = 1;
@@ -660,10 +660,9 @@ namespace OptimalSchedulingLogic
                 if (minMachine.EndTime > currentTask.ExtremeTime)
                 {
                     // engage next processor
-                    var nextMachine = new MachineScheduleWrapper(this[j]);
+                    var nextMachine = new MachineScheduleWrapper(this[j], currentTask.Deadline);
                     nextMachine.Schedule.StartTime = currentTask.ExtremeTime;
                     nextMachine.Schedule.Tasks.AddLast(currentTask);
-                    nextMachine.EndTime = currentTask.Deadline;
                     initialAppointmentInfo.Add(nextMachine);
                     ++j;
                     continue;
@@ -693,10 +692,9 @@ namespace OptimalSchedulingLogic
 
             // Engage one machine and appoint first task
             var firstTask = tasks[0];
-            var engagedMachine = new MachineScheduleWrapper(this[0]);
+            var engagedMachine = new MachineScheduleWrapper(this[0], firstTask.Deadline);
             engagedMachine.Schedule.Tasks.AddLast(firstTask);
             engagedMachine.Schedule.StartTime = firstTask.ExtremeTime;
-            engagedMachine.EndTime = firstTask.Deadline;
             initialAppointment.Add(engagedMachine);
 
             exactAppointment.Add((MachineScheduleWrapper) engagedMachine.Clone());
@@ -706,64 +704,66 @@ namespace OptimalSchedulingLogic
             var possibleMachines = new HashSet<int>();
             var suspectedTasks = new SortedSet<SuspectedTask>();
             var combBorder = (int) (combinationBorder*Count);
+            var withSameExtreme = new List<Task>();
+            var withSameExtrPossible = new List<int>();
             while (j < Count && i < tasks.Count)
             {
                 var currentTask = tasks[i];
-                i++;
 
-                // Check for exact mode renewal
-                if (possibleMachines.Count > 0)
-                {
-                    var exact = true;
-                    foreach (var m in initialAppointment)
-                    {
-                        var lastTask = m.Schedule.Tasks.Last.Value;
-                        if (m.EndTime < lastTask.Deadline)
-                        {
-                            exact = false;
-                            break;
-                        }
-                    }
+                #region Check for exact mode renewal
+                //if (suspectedTasks.Count > 0 && withSameExtreme.Count == 0)
+                //{
+                //    var exact = true;
+                //    foreach (var m in initialAppointment)
+                //    {
+                //        var lastTask = m.Schedule.Tasks.Last.Value;
+                //        if (m.EndTime < lastTask.Deadline)
+                //        {
+                //            exact = false;
+                //            break;
+                //        }
+                //    }
 
-                    if (exact)
-                    {
-                        for (var k = 0; exact && k < j; k++)
-                        {
-                            var kMachine = initialAppointment[k];
-                            for (var l = 0; exact && l < j; l++)
-                            {
-                                if (l == k)
-                                {
-                                    continue;
-                                }
+                //    if (exact)
+                //    {
+                //        for (var k = 0; exact && k < j; k++)
+                //        {
+                //            var kMachine = initialAppointment[k];
+                //            for (var l = 0; exact && l < j; l++)
+                //            {
+                //                if (l == k)
+                //                {
+                //                    continue;
+                //                }
 
-                                var lMachine = initialAppointment[l];
-                                var current = lMachine.Schedule.Tasks.Last;
-                                while (current.Value.Deadline > kMachine.Schedule.Tasks.Last.Value.Deadline &&
-                                    current != lMachine.Schedule.Tasks.First)
-                                {
-                                    if (!(current.Value.ExtremeTime < kMachine.EndTime))
-                                    {
-                                        exact = false;
-                                        break;
-                                    }
-                                    current = current.Previous;
-                                }
-                            }
-                        }
+                //                var lMachine = initialAppointment[l];
+                //                var current = lMachine.Schedule.Tasks.Last;
+                //                while (current.Value.Deadline > kMachine.Schedule.Tasks.Last.Value.Deadline &&
+                //                       current != lMachine.Schedule.Tasks.First)
+                //                {
+                //                    if (!(current.Value.ExtremeTime < kMachine.EndTime))
+                //                    {
+                //                        exact = false;
+                //                        break;
+                //                    }
+                //                    current = current.Previous;
+                //                }
+                //            }
+                //        }
 
-                        if (exact)
-                        {
-                            possibleMachines.Clear();
-                            suspectedTasks.Clear();
-                            exactAppointment.Clear();
-                            foreach (var m in initialAppointment)
-                            {
-                                exactAppointment.Add((MachineScheduleWrapper) m.Clone());
-                            }
-                        }
-                    }
-                }
+                //        if (exact)
+                //        {
+                //            possibleMachines.Clear();
+                //            suspectedTasks.Clear();
+                //            exactAppointment.Clear();
+                //            foreach (var m in initialAppointment)
+                //            {
+                //                exactAppointment.Add((MachineScheduleWrapper) m.Clone());
+                //            }
+                //        }
+                //    }
+                //}
+                #endregion
 
                 // Determine possible machines
                 var machineIndex = 0;
@@ -824,12 +824,56 @@ namespace OptimalSchedulingLogic
                         minDelta = currMinDelta;
                     }
                 }
+
+                if (withSameExtreme.Count > 0 && tasks[i - 1].ExtremeTime != currentTask.ExtremeTime)
+                {
+                    if (withSameExtrPossible.Count == 1)
+                    {
+                        // Add to exact appointment
+                        foreach (var t in withSameExtreme)
+                        {
+                            var em = exactAppointment[withSameExtrPossible[0]];
+                            var current = em.Schedule.Tasks.Last;
+                            while (current != null && current != em.Schedule.Tasks.First && current.Value.Deadline > currentTask.Deadline)
+                            {
+                                current = current.Previous;
+                            }
+                            if (current == null)
+                            {
+                                em.Schedule.Tasks.AddLast(t);
+                            }
+                            else
+                            {
+                                em.Schedule.Tasks.AddAfter(current, t);
+                            }
+                            em.EndTime = em.EndTime.AddMinutes(t.Duration);
+                        }
+                        suspectedTasks.Clear();
+                    }
+                    withSameExtreme.Clear();
+                    withSameExtrPossible.Clear();
+                }
+
+                // Check for same extreme times
+                if ((tasks[i - 1].ExtremeTime == currentTask.ExtremeTime ||
+                    (i < tasks.Count - 1 && tasks[i + 1].ExtremeTime == currentTask.ExtremeTime)) &&
+                    (withSameExtreme.Count > 0 || possibleMachines.Count > 0))
+                {
+                    withSameExtreme.Add(currentTask);
+                    if (withSameExtrPossible.Count == 0)
+                    {
+                        withSameExtrPossible.AddRange(possibleMachines);
+                    }
+                    suspectedTasks.Add(new SuspectedTask(currentTask, new List<int>(withSameExtrPossible)));
+                }
                 
+                i++;
+
                 if (possibleMachines.Count < 2)
                 {
                     possibleMachines.Clear();
                 }
-                else
+                else if (withSameExtreme.Count == 0)
                 {
                     suspectedTasks.Add(new SuspectedTask(currentTask, new List<int>(possibleMachines)));
                 }
@@ -842,15 +886,22 @@ namespace OptimalSchedulingLogic
                     m.EndTime = m.EndTime.AddMinutes(currentTask.Duration);
 
                     // Add to exact appointment
-                    if (possibleMachines.Count == 0)
+                    if (suspectedTasks.Count == 0)
                     {
                         var em = exactAppointment[machineIndex];
                         var current = em.Schedule.Tasks.Last;
-                        while (current != m.Schedule.Tasks.First && current.Value.Deadline > currentTask.Deadline)
+                        while (current != null && current != em.Schedule.Tasks.First && current.Value.Deadline > currentTask.Deadline)
                         {
                             current = current.Previous;
                         }
-                        em.Schedule.Tasks.AddAfter(current, currentTask);
+                        if (current == null)
+                        {
+                            em.Schedule.Tasks.AddLast(currentTask);
+                        }
+                        else
+                        {
+                            em.Schedule.Tasks.AddAfter(current, currentTask);
+                        }
                         em.EndTime = em.EndTime.AddMinutes(currentTask.Duration);
                     }
                     
@@ -859,7 +910,7 @@ namespace OptimalSchedulingLogic
 
                 // The magic happens here :)
                 var engageNext = true;
-                if (possibleMachines.Count > 0)
+                if (suspectedTasks.Count > 0)
                 {
                     var pseudoSchedule = new MachineScheduleWrapper[j];
                     for (var k = 0; k < j; k++)
@@ -879,22 +930,20 @@ namespace OptimalSchedulingLogic
                             // Find the place by deadline
                             var currentEnd = m.EndTime;
                             var current = m.Schedule.Tasks.Last;
-                            var minReserve = current.Value.Deadline - currentEnd;
-                            var stIsLast = true;
-                            while (current != m.Schedule.Tasks.First && current.Value.Deadline > currentTask.Deadline)
+                            var minReserve = TimeSpan.MaxValue;
+                            while (current != null && current != m.Schedule.Tasks.First && current.Value.Deadline > st.Task.Deadline)
                             {
-                                stIsLast = false;
-                                currentEnd = currentEnd.AddMinutes(-current.Value.Duration);
-                                current = current.Previous;
                                 var currentReserve = current.Value.Deadline - currentEnd;
                                 if (currentReserve < minReserve)
                                 {
                                     minReserve = currentReserve;
                                 }
+                                currentEnd = currentEnd.AddMinutes(-current.Value.Duration);
+                                current = current.Previous;
                             }
 
                             var ownReserve = st.Task.Deadline - currentEnd;
-                            if (stIsLast || ownReserve < minReserve)
+                            if (ownReserve < minReserve)
                             {
                                 minReserve = ownReserve;
                             }
@@ -906,9 +955,16 @@ namespace OptimalSchedulingLogic
                                 exit = true;
                             }
 
-                            m.Schedule.Tasks.AddAfter(current,
-                                new Task(st.Task.Id, string.Format("Pseudo #{0}", st.Task.Id), duration,
-                                    st.Task.Deadline));
+                            var newTask = new Task(st.Task.Id, string.Format("Pseudo #{0}", st.Task.Id), duration,
+                                st.Task.Deadline);
+                            if (current == null)
+                            {
+                                m.Schedule.Tasks.AddLast(newTask);
+                            }
+                            else
+                            {
+                                m.Schedule.Tasks.AddAfter(current, newTask);
+                            }
                             m.EndTime = m.EndTime.AddMinutes(duration);
 
                             remainingDuration -= duration;
@@ -927,18 +983,27 @@ namespace OptimalSchedulingLogic
                 if (!engageNext && combBorder >= suspectedTasks.Count)
                 {
                     var indexes = new int[j];
-                    var endTimes = new DateTime[j];
                     for (var k = 0; k < j; k++)
                     {
                         indexes[k] = k;
-                        endTimes[k] = exactAppointment[k].EndTime;
                     }
-                    
+
+                    var pseudoSchedule = new MachineScheduleWrapper[j];
+                    for (var l = 0; l < j; l++)
+                    {
+                        pseudoSchedule[l] = (MachineScheduleWrapper) exactAppointment[l].Clone();
+                    }
+
                     var variations = new Variations<int>(indexes, suspectedTasks.Count, GenerateOption.WithRepetition);
                     var appointed = false;
                     foreach (var v in variations)
                     {
-                        var currEndTimes = endTimes.ToArray();
+                        for (var l = 0; l < j; l++)
+                        {
+                            pseudoSchedule[l].Schedule.Tasks = new LinkedList<Task>(exactAppointment[l].Schedule.Tasks);
+                            pseudoSchedule[l].EndTime = exactAppointment[l].EndTime;
+                        }
+
                         var k = 0;
                         var succeed = true;
                         foreach (var st in suspectedTasks)
@@ -950,14 +1015,45 @@ namespace OptimalSchedulingLogic
                                 break;
                             }
 
-                            var newEndTime = currEndTimes[index].AddMinutes(st.Task.Duration);
-                            if (newEndTime > st.Task.Deadline)
+                            var m = pseudoSchedule[index];
+
+                            // Find the place by deadline
+                            var currentEnd = m.EndTime;
+                            var current = m.Schedule.Tasks.Last;
+                            var minReserve = TimeSpan.MaxValue;
+                            while (current != null && current != m.Schedule.Tasks.First && current.Value.Deadline > st.Task.Deadline)
+                            {
+                                var currentReserve = current.Value.Deadline - currentEnd;
+                                if (currentReserve < minReserve)
+                                {
+                                    minReserve = currentReserve;
+                                }
+                                currentEnd = currentEnd.AddMinutes(-current.Value.Duration);
+                                current = current.Previous;
+                            }
+
+                            var ownReserve = st.Task.Deadline - currentEnd;
+                            if (ownReserve < minReserve)
+                            {
+                                minReserve = ownReserve;
+                            }
+
+                            if (minReserve.TotalMinutes < st.Task.Duration)
                             {
                                 succeed = false;
                                 break;
                             }
-
-                            currEndTimes[index] = newEndTime;
+                            
+                            if (current == null)
+                            {
+                                m.Schedule.Tasks.AddLast(st.Task);
+                            }
+                            else
+                            {
+                                m.Schedule.Tasks.AddAfter(current, st.Task);
+                            }
+                            m.EndTime = m.EndTime.AddMinutes(st.Task.Duration);
+                            
                             k++;
                         }
 
@@ -1001,13 +1097,36 @@ namespace OptimalSchedulingLogic
                 
                 if (engageNext)
                 {
-                    var nextMachine = new MachineScheduleWrapper(this[j]);
+                    var nextMachine = new MachineScheduleWrapper(this[j], currentTask.Deadline);
                     nextMachine.Schedule.StartTime = currentTask.ExtremeTime;
                     nextMachine.Schedule.Tasks.AddLast(currentTask);
-                    nextMachine.EndTime = currentTask.Deadline;
                     initialAppointment.Add(nextMachine);
 
-                    exactAppointment.Add((MachineScheduleWrapper)nextMachine.Clone());
+                    if (withSameExtreme.Count == 0)
+                    {
+                        exactAppointment.Add((MachineScheduleWrapper) nextMachine.Clone());
+                    }
+                    else
+                    {
+                        // Reserve new exact machine
+                        exactAppointment.Add(new MachineScheduleWrapper(
+                            new MachineSchedule(this[j].Machine, currentTask.ExtremeTime, new LinkedList<Task>()),
+                            currentTask.ExtremeTime)
+                            );
+                        foreach (var t in suspectedTasks)
+                        {
+                            if (withSameExtreme.Contains(t.Task))
+                            {
+                                t.PossibleMachines.Add(j);
+                            }
+                        }
+                        foreach (var m in withSameExtrPossible)
+                        {
+                            possibleMachines.Add(m);
+                        }
+                        possibleMachines.Add(j);
+                        withSameExtrPossible.Clear();
+                    }
 
                     ++j;
                     continue;
@@ -1298,10 +1417,9 @@ namespace OptimalSchedulingLogic
 
             // Engage one machine and appoint first task
             var firstTask = tasks[0];
-            var engagedMachine = new MachineScheduleWrapper(schedule[0]);
+            var engagedMachine = new MachineScheduleWrapper(schedule[0], firstTask.Deadline);
             engagedMachine.Schedule.Tasks.AddLast(firstTask);
             engagedMachine.Schedule.StartTime = firstTask.ExtremeTime;
-            engagedMachine.EndTime = firstTask.Deadline;
             machineSchedules.Add(engagedMachine);
 
             var j = 1;
@@ -1317,9 +1435,8 @@ namespace OptimalSchedulingLogic
                     if (j < schedule.Count)
                     {
                         // Engage next machine
-                        currentBest = new MachineScheduleWrapper(schedule[j]);
+                        currentBest = new MachineScheduleWrapper(schedule[j], currentTask.Deadline);
                         currentBest.Schedule.StartTime = currentTask.ExtremeTime;
-                        currentBest.EndTime = currentTask.Deadline;
                         j++;
                     }
                     else
@@ -1555,7 +1672,7 @@ namespace OptimalSchedulingLogic
             {
             }
 
-            private MachineScheduleWrapper(MachineSchedule schedule, DateTime endTime)
+            public MachineScheduleWrapper(MachineSchedule schedule, DateTime endTime)
             {
                 Schedule = schedule;
                 EndTime = endTime;

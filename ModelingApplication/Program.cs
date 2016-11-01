@@ -6,11 +6,11 @@ namespace ModelingApplication
     {
         public static void Main(string[] args)
         {
-            const int n = 1000;
+            const int n = 11;
             const int m = 3;
-            const int iterNum = 7777;
+            const int iterNum = 1000000;
             Console.WriteLine("Efficiency = {0:f3}", Modeler.CalculateOptimalityCriterionEfficiency(n, m, iterNum,
-                () => Modeler.NextNormal(2.0, 1.0), () => Modeler.NextExponential(0.5))*100);
+                () => Modeler.NextGamma(5.0, 0.5), () => Modeler.NextGamma(5.0, 0.5))*100);
 
             Console.ReadKey();
         }

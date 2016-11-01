@@ -8,3 +8,6 @@ C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.csprojResolveAssemblyReference.cache
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.exe
 C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\obj\Debug\ModelingApplication.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\Combinatorics.dll
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\Combinatorics.pdb
+C:\Users\d1mas\onedrive\documents\visual studio 2015\Projects\OptimalScheduling\ModelingApplication\bin\Debug\Combinatorics.xml

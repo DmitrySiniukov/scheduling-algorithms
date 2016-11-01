@@ -25,11 +25,23 @@ namespace ModelingApplication
 
                 for (var j = 0; j < n; j++)
                 {
-                    currentDeadline = currentDeadline.AddMinutes(nextDeadlineGenerator());
-                    tasks.Add(new Task(j + 1, string.Format("Task #{0}", j + 1), lengthGenerator(), currentDeadline));
+                    currentDeadline = currentDeadline.AddMinutes((int) Math.Round(nextDeadlineGenerator()));
+                    int length;
+                    do
+                    {
+                        length = (int) Math.Round(lengthGenerator());
+                    } while (!(length > 0));
+                    tasks.Add(new Task(j + 1, string.Format("Task #{0}", j + 1), length, currentDeadline));
                 }
 
-                var res = Schedule.OptimalInitialSchedule(tasks, machines);
+                var res = Schedule.OptimalInitialSchedule(tasks, machines, 3);
+                var resAcc = Schedule.BuildOptimalSchedule(tasks, machines);
+                if (res.CompareTo(resAcc) < 0)
+                {
+                    Console.WriteLine("Error");
+                    var t = Schedule.OptimalInitialSchedule(tasks, machines, 3);
+                }
+
                 if (res != null)
                 {
                     succeedCounter++;
@@ -41,16 +53,17 @@ namespace ModelingApplication
             return numerator/denominator;
         }
 
-        public static double NextNormal(double mean, double standartDeviation)
+        public static double NextNormal(double mean, double standartDeviation, bool allowZero = false)
         {
             var distribution = Normal.WithMeanStdDev(mean, standartDeviation);
 
-            double value;
-            do
+            var value = 0d;
+            var process = true;
+            while (process)
             {
                 value = distribution.Sample();
-
-            } while (!(value > 0));
+                process = value < 0d || !(allowZero || value > 0d);
+            }
 
             return value;
         }

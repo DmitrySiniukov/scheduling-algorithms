@@ -28,7 +28,7 @@ namespace WebApplication.Controllers
 
 			var tasks = new List<Task>();
 			var taskStream = new StreamReader(model.TasksFile.InputStream);
-			var baseDeadline = DateTime.Now.Date;
+			var baseDeadline = new DateTime(2016, 12, 28, 12, 0, 0);
 			try
 			{
 				var taskNumber = int.Parse(taskStream.ReadLine());

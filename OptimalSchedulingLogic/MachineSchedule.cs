@@ -18,7 +18,7 @@ namespace OptimalSchedulingLogic
         /// <summary>
         /// Tasks
         /// </summary>
-        public LinkedList<Task> Tasks { get; }
+        public LinkedList<Task> Tasks { get; set; }
 
         #region Constructors
 

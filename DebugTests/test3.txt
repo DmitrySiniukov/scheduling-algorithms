@@ -1,0 +1,12 @@
+11
+1 task_1 7 5
+2 task_2 5 14
+3 task_3 8 21
+4 task_4 4 29
+5 task_5 8 41
+6 task_6 17 48
+7 task_7 13 61
+8 task_8 13 71
+9 task_9 7 78
+10 task_10 13 88
+11 task_11 30 98

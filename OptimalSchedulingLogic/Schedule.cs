@@ -125,7 +125,7 @@ namespace OptimalSchedulingLogic
 
             var schedule_A11 = new Schedule(machinesList);
             int nextTaskIndex;
-            var initSchedule = schedule_A11.optimalInitialSchedule(tasksList, 0, out nextTaskIndex);
+            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
 
             var adjBorder = adjustmentBorder ?? new TimeSpan(0, 8, 0);
             

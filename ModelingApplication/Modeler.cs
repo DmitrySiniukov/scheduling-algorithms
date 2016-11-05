@@ -22,7 +22,7 @@ namespace ModelingApplication
             var feasibleExistsNumber = 0;
             long totalTime = 0;
             var sw = new Stopwatch();
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < testsNumber; i++)
             {
                 var tasks = new List<Task>();
                 var currentDeadline = new DateTime(2016, 12, 28, 12, 0, 0);

@@ -9,20 +9,26 @@ namespace ModelingApplication
         {
             const int n = 16;
             const int m = 3;
-            const int iterNum = 100;
+            const int iterNum = 300;
             const int schedulesNum = 1000;
 
-            using (var fileStream = File.AppendText("stats.txt"))
+            for (var i = 28; i < schedulesNum; i++)
             {
-                fileStream.WriteLine("n={0},m={1},iterNum={2}", n, m, iterNum);
-                for (var i = 0; i < schedulesNum; i++)
-                {
-                    var currentScale = (i + 1)*0.5;
-                    var result = Modeler.CalculateOptimalityCriterionEfficiency(n, m, iterNum,
-                        () => Modeler.NextGamma(5.0, 5.0), () => Modeler.NextExponential(currentScale));
+                var currentScale = (i + 1)*1.0;
+                InitialAlgorithmStatistics newAlgorithmStatistics;
+                InitialAlgorithmStatistics primaryAlgorithmStatistics;
+                InitialAlgorithmStatistics primaryFirstCriterion;
+                Modeler.CalculateOptimalityCriterionEfficiency(n, m, iterNum,
+                    () => Modeler.NextGamma(5.0, 5.0), () => Modeler.NextExponential(currentScale),
+                    out newAlgorithmStatistics,
+                    out primaryAlgorithmStatistics, out primaryFirstCriterion);
 
-                    fileStream.WriteLine("scale: {0}, success: {1}, sign.: {2}, av.time: {3}", currentScale,
-                        result.SuccessfulPercent, result.FeasibleExistsPercent, result.AverageTime);
+                using (var fileStream = File.AppendText("stats2.txt"))
+                {
+                    fileStream.WriteLine("{0} {1} {2} {3} {4} {5} {6}", currentScale,
+                        primaryFirstCriterion.SuccessfulPercent, primaryFirstCriterion.FeasibleExistsPercent,
+                        primaryAlgorithmStatistics.SuccessfulPercent, primaryAlgorithmStatistics.FeasibleExistsPercent,
+                        newAlgorithmStatistics.SuccessfulPercent, newAlgorithmStatistics.FeasibleExistsPercent);
                 }
             }
 

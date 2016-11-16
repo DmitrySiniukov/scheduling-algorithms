@@ -2,14 +2,14 @@
 using OptimalSchedulingLogic;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace ModelingApplication
 {
     internal class Modeler
     {
-        public static InitialAlgorithmStatistics CalculateOptimalityCriterionEfficiency(int n, int m, int testsNumber,
-            Func<double> lengthGenerator, Func<double> nextDeadlineGenerator)
+        public static void CalculateOptimalityCriterionEfficiency(int n, int m, int testsNumber,
+            Func<double> lengthGenerator, Func<double> nextDeadlineGenerator, out InitialAlgorithmStatistics newAlgorithm,
+            out InitialAlgorithmStatistics primaryAlgorithm, out InitialAlgorithmStatistics primaryFirstCriterion)
         {
             // Generate machines
             var machines = new List<Machine>();
@@ -18,10 +18,9 @@ namespace ModelingApplication
                 machines.Add(new Machine(i + 1, string.Format("Machine #{0}", i + 1)));
             }
 
-            var successfulNumber = 0;
-            var feasibleExistsNumber = 0;
-            long totalTime = 0;
-            var sw = new Stopwatch();
+            newAlgorithm = new InitialAlgorithmStatistics {TestsNumber = testsNumber};
+            primaryAlgorithm = new InitialAlgorithmStatistics {TestsNumber = testsNumber};
+            primaryFirstCriterion = new InitialAlgorithmStatistics {TestsNumber = testsNumber};
             for (var i = 0; i < testsNumber; i++)
             {
                 var tasks = new List<Task>();
@@ -37,51 +36,69 @@ namespace ModelingApplication
                     } while (!(length > 0));
                     tasks.Add(new Task(j + 1, string.Format("Task #{0}", j + 1), length, currentDeadline));
                 }
-
-                sw.Start();
-                var res = Schedule.OptimalInitialSchedule(tasks, machines, 3);
-                sw.Stop();
-                totalTime += sw.ElapsedMilliseconds;
-                sw.Reset();
-
-                if (res == null)
-                {
-                    continue;
-                }
-
+                
+                bool firstCriterion;
+                var primaryAlg = Schedule.OptimalInitialSchedulePrimary(tasks, machines, out firstCriterion);
+                var newAlg = Schedule.OptimalInitialSchedule(tasks, machines, 3);
                 var resAcc = Schedule.BuildOptimalSchedule(tasks, machines);
-
-                var compareResult = res.CompareTo(resAcc);
-                if (compareResult < 0)
+                
+                if (primaryAlg != null)
                 {
-                    Console.WriteLine("Error");
-                    var t = Schedule.OptimalInitialSchedule(tasks, machines, 3);
-
-                    using (var fileStream = System.IO.File.AppendText("log.txt"))
+                    primaryAlgorithm.SuccessfulNumber++;
+                    if (firstCriterion)
                     {
-                        fileStream.WriteLine("\t(id) \"Name\"\tl\td");
-                        foreach (var task in tasks)
+                        primaryFirstCriterion.SuccessfulNumber++;
+                    }
+                    var primaryCompareRes = primaryAlg.CompareTo(resAcc);
+                    if (primaryCompareRes < 0)
+                    {
+                        Console.WriteLine("Error");
+                        var t = Schedule.OptimalInitialSchedule(tasks, machines, 3);
+
+                        using (var fileStream = System.IO.File.AppendText("log.txt"))
                         {
-                            fileStream.WriteLine("\t({0}) \"{1}\"\t{2}\t{3}", task.Id, task.Name, task.Duration,
-                                (task.Deadline - currentDeadline).TotalMinutes);
+                            fileStream.WriteLine("\t(id) \"Name\"\tl\td");
+                            foreach (var task in tasks)
+                            {
+                                fileStream.WriteLine("\t({0}) \"{1}\"\t{2}\t{3}", task.Id, task.Name, task.Duration,
+                                    (task.Deadline - currentDeadline).TotalMinutes);
+                            }
+                        }
+                    }
+                    if (primaryCompareRes == 0)
+                    {
+                        primaryAlgorithm.FeasibleExistsNumber++;
+                        if (firstCriterion)
+                        {
+                            primaryFirstCriterion.FeasibleExistsNumber++;
                         }
                     }
                 }
-                if (compareResult == 0)
+                if (newAlg != null)
                 {
-                    feasibleExistsNumber++;
+                    newAlgorithm.SuccessfulNumber++;
+                    var newCompareRes = newAlg.CompareTo(resAcc);
+                    if (newCompareRes < 0)
+                    {
+                        Console.WriteLine("Error");
+                        var t = Schedule.OptimalInitialSchedule(tasks, machines, 3);
+
+                        using (var fileStream = System.IO.File.AppendText("log.txt"))
+                        {
+                            fileStream.WriteLine("\t(id) \"Name\"\tl\td");
+                            foreach (var task in tasks)
+                            {
+                                fileStream.WriteLine("\t({0}) \"{1}\"\t{2}\t{3}", task.Id, task.Name, task.Duration,
+                                    (task.Deadline - currentDeadline).TotalMinutes);
+                            }
+                        }
+                    }
+                    if (newCompareRes == 0)
+                    {
+                        newAlgorithm.FeasibleExistsNumber++;
+                    }
                 }
-
-                successfulNumber++;
             }
-
-            return new InitialAlgorithmStatistics
-            {
-                TestsNumber = testsNumber,
-                SuccessfulNumber = successfulNumber,
-                FeasibleExistsNumber = feasibleExistsNumber,
-                AverageTime = totalTime/(double) testsNumber
-            };
         }
 
         public static double NextNormal(double mean, double standartDeviation, bool allowZero = false)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Combinatorics.Collections;
@@ -125,7 +124,8 @@ namespace OptimalSchedulingLogic
 
             var schedule_A11 = new Schedule(machinesList);
             int nextTaskIndex;
-            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
+            bool firstCriterion;
+            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex, out firstCriterion);
 
             var adjBorder = adjustmentBorder ?? new TimeSpan(0, 8, 0);
             
@@ -153,27 +153,27 @@ namespace OptimalSchedulingLogic
                     initScheduleList.Add((MachineScheduleWrapper)machineSchedule.Clone());
                 }
 
-                var success_A11 = false;
+                var success_A11 = true;
 
-                //#region Algorithm A1.1
+                #region Algorithm A1.1
 
-                //foreach (var currentTask in remainingTasks)
-                //{
-                //    var firstMachine = initSchedule.Min;
-                //    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
-                //    if (newEndTime > currentTask.Deadline)
-                //    {
-                //        success_A11 = false;
-                //        break;
-                //    }
+                foreach (var currentTask in remainingTasks)
+                {
+                    var firstMachine = initSchedule.Min;
+                    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
+                    if (newEndTime > currentTask.Deadline)
+                    {
+                        success_A11 = false;
+                        break;
+                    }
 
-                //    initSchedule.Remove(firstMachine);
-                //    firstMachine.Schedule.Tasks.AddLast(currentTask);
-                //    firstMachine.EndTime = newEndTime;
-                //    initSchedule.Add(firstMachine);
-                //}
+                    initSchedule.Remove(firstMachine);
+                    firstMachine.Schedule.Tasks.AddLast(currentTask);
+                    firstMachine.EndTime = newEndTime;
+                    initSchedule.Add(firstMachine);
+                }
 
-                //#endregion
+                #endregion
 
                 if (success_A11)
                 {
@@ -586,14 +586,15 @@ namespace OptimalSchedulingLogic
             return schedule;
         }
 
-        public static Schedule OptimalInitialSchedulePrimary(IEnumerable<Task> tasks, IEnumerable<Machine> machines)
+        public static Schedule OptimalInitialSchedulePrimary(IEnumerable<Task> tasks, IEnumerable<Machine> machines,
+            out bool firstCriterion)
         {
             var tasksList = new List<Task>(tasks);
             tasksList.Sort((x, y) => x.ExtremeTime.CompareTo(y.ExtremeTime));
             var schedule = new Schedule(machines);
 
             int nextTaskIndex;
-            var result = schedule.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex);
+            var result = schedule.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex, out firstCriterion);
             if (result == null)
             {
                 return null;
@@ -623,7 +624,8 @@ namespace OptimalSchedulingLogic
 
         #region Service functions
 
-        private SortedSet<MachineScheduleWrapper> optimalInitialSchedulePrimary(List<Task> tasks, out int nextTaskIndex)
+        private SortedSet<MachineScheduleWrapper> optimalInitialSchedulePrimary(List<Task> tasks, out int nextTaskIndex,
+            out bool firstCriterion)
         {
             nextTaskIndex = 0;
             var initialAppointmentInfo = new SortedSet<MachineScheduleWrapper>();
@@ -637,6 +639,7 @@ namespace OptimalSchedulingLogic
 
             var i = 1;
             var j = 1;
+            firstCriterion = true;
             while (j < Count && i < tasks.Count)
             {
                 var currentTask = tasks[i];
@@ -678,6 +681,7 @@ namespace OptimalSchedulingLogic
                 minMachine.Schedule.Tasks.AddLast(currentTask);
                 minMachine.EndTime = minMachine.EndTime.AddMinutes(currentTask.Duration);
                 initialAppointmentInfo.Add(minMachine);
+                firstCriterion = false;
             }
 
             nextTaskIndex = i;
@@ -1166,9 +1170,7 @@ namespace OptimalSchedulingLogic
                         }
                         continue;
                     }
-
-                    // Remove the current task from suspected
-                    suspectedTasks.RemoveWhere(t => t.Task == currentTask);
+                    
                     engageNext = true;
                 }
 
@@ -1184,6 +1186,8 @@ namespace OptimalSchedulingLogic
                     if (withSameExtreme.Count == 0)
                     {
                         exactAppointment.Add((MachineScheduleWrapper) nextMachine.Clone());
+                        // Remove the current task from suspected
+                        suspectedTasks.RemoveWhere(t => t.Task == currentTask);
                     }
                     else
                     {

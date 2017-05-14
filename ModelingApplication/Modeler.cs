@@ -28,11 +28,11 @@ namespace ModelingApplication
 
                 for (var j = 0; j < n; j++)
                 {
-                    currentDeadline = currentDeadline.AddMinutes(nextDeadlineGenerator());
-                    double length;
+                    currentDeadline = currentDeadline.AddMinutes((int) Math.Floor(nextDeadlineGenerator()));
+                    int length;
                     do
                     {
-                        length = lengthGenerator();
+                        length = (int) Math.Round(lengthGenerator());
                     } while (!(length > 0));
                     tasks.Add(new Task(j + 1, string.Format("Task #{0}", j + 1), length, currentDeadline));
                 }
@@ -96,6 +96,16 @@ namespace ModelingApplication
                     if (newCompareRes == 0)
                     {
                         newAlgorithm.FeasibleExistsNumber++;
+                    }
+                }
+
+                using (var fileStream = System.IO.File.AppendText("tasks2.txt"))
+                {
+                    fileStream.WriteLine("\t(id) \"Name\"\tl\td");
+                    foreach (var task in tasks)
+                    {
+                        fileStream.WriteLine("\t({0}) \"{1}\"\t{2}\t{3}", task.Id, task.Name, task.Duration,
+                            (task.Deadline - currentDeadline).TotalMinutes);
                     }
                 }
             }

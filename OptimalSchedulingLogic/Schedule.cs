@@ -125,7 +125,7 @@ namespace OptimalSchedulingLogic
             var schedule_A11 = new Schedule(machinesList);
             int nextTaskIndex;
             bool firstCriterion;
-            var initSchedule = schedule_A11.optimalInitialSchedulePrimary(tasksList, out nextTaskIndex, out firstCriterion);
+            var initSchedule = schedule_A11.optimalInitialSchedule(tasksList, 5, out nextTaskIndex);
 
             var adjBorder = adjustmentBorder ?? new TimeSpan(0, 8, 0);
             
@@ -153,25 +153,25 @@ namespace OptimalSchedulingLogic
                     initScheduleList.Add((MachineScheduleWrapper)machineSchedule.Clone());
                 }
 
-                var success_A11 = true;
+                var success_A11 = false;
 
                 #region Algorithm A1.1
 
-                foreach (var currentTask in remainingTasks)
-                {
-                    var firstMachine = initSchedule.Min;
-                    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
-                    if (newEndTime > currentTask.Deadline)
-                    {
-                        success_A11 = false;
-                        break;
-                    }
+                //foreach (var currentTask in remainingTasks)
+                //{
+                //    var firstMachine = initSchedule.Min;
+                //    var newEndTime = firstMachine.EndTime.AddMinutes(currentTask.Duration);
+                //    if (newEndTime > currentTask.Deadline)
+                //    {
+                //        success_A11 = false;
+                //        break;
+                //    }
 
-                    initSchedule.Remove(firstMachine);
-                    firstMachine.Schedule.Tasks.AddLast(currentTask);
-                    firstMachine.EndTime = newEndTime;
-                    initSchedule.Add(firstMachine);
-                }
+                //    initSchedule.Remove(firstMachine);
+                //    firstMachine.Schedule.Tasks.AddLast(currentTask);
+                //    firstMachine.EndTime = newEndTime;
+                //    initSchedule.Add(firstMachine);
+                //}
 
                 #endregion
 
@@ -813,8 +813,7 @@ namespace OptimalSchedulingLogic
                 #region Check for same extreme times
 
                 if ((tasks[i - 1].ExtremeTime == currentTask.ExtremeTime ||
-                    (i < tasks.Count - 1 && tasks[i + 1].ExtremeTime == currentTask.ExtremeTime)) &&
-                    (withSameExtreme.Count > 0 || possibleMachines.Count > 0))
+                    (i < tasks.Count - 1 && tasks[i + 1].ExtremeTime == currentTask.ExtremeTime)))
                 {
                     withSameExtreme.Add(currentTask);
                     if (withSameExtrPossible.Count == 0)
@@ -863,7 +862,7 @@ namespace OptimalSchedulingLogic
                         }
                         em.EndTime = em.EndTime.AddMinutes(currentTask.Duration);
                     }
-                    else if (suspectedTasks.Count == searchDepth)
+                    else if (suspectedTasks.Count == searchDepth && withSameExtreme.Count == 0)
                     {
                         #region Try renew exact appointment
 
@@ -1158,7 +1157,7 @@ namespace OptimalSchedulingLogic
 
                     if (appointed)
                     {
-                        if (feasibleCount == 1)
+                        if (feasibleCount == 1 && withSameExtreme.Count == 0)
                         {
                             possibleMachines.Clear();
                             suspectedTasks.Clear();

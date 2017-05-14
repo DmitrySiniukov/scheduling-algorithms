@@ -9,17 +9,17 @@ namespace ModelingApplication
         {
             const int n = 16;
             const int m = 3;
-            const int iterNum = 300;
+            const int iterNum = 20;
             const int schedulesNum = 1000;
 
-            for (var i = 28; i < schedulesNum; i++)
+            for (var i = 9; i < schedulesNum; i++)
             {
                 var currentScale = (i + 1)*1.0;
                 InitialAlgorithmStatistics newAlgorithmStatistics;
                 InitialAlgorithmStatistics primaryAlgorithmStatistics;
                 InitialAlgorithmStatistics primaryFirstCriterion;
                 Modeler.CalculateOptimalityCriterionEfficiency(n, m, iterNum,
-                    () => Modeler.NextGamma(5.0, 5.0), () => Modeler.NextExponential(currentScale),
+                    () => Modeler.NextGamma(2.0, 8.0), () => Modeler.NextExponential(currentScale),
                     out newAlgorithmStatistics,
                     out primaryAlgorithmStatistics, out primaryFirstCriterion);
 
